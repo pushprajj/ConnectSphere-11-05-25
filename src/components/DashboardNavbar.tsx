@@ -20,7 +20,9 @@ const getNavItems = (session: Session | null) => [
 
 export default function DashboardNavbar() {
   const { data: session } = useSession();
+  console.log('DashboardNavbar rendered with session:', session);
   const pathname = usePathname();
+  console.log('DashboardNavbar rendered on pathname:', pathname);
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
 

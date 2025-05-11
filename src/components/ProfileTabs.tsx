@@ -1,6 +1,15 @@
 // src/components/ProfileTabs.tsx
 'use client';
-import { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { FaBriefcase, FaMapMarkerAlt, FaGlobe, FaEdit, FaCamera, FaUsers, FaCalendar } from 'react-icons/fa';
+import ImageUploadModal from './ImageUploadModal';
+import EditBusinessNameModal from './EditBusinessNameModal';
+import EditBusinessInfoModal from './EditBusinessInfoModal';
+import EditTaglineModal from './EditTaglineModal';
+import EditAboutModal from './EditAboutModal';
 
 interface Product {
   id?: string;
@@ -13,6 +22,29 @@ interface Product {
   availability: string;
   business_id: string;
 }
+
+type UserData = {
+  id: string;
+  name?: string;
+  image?: string;
+  full_name?: string;
+  username?: string;
+};
+
+type BusinessData = {
+  id: string;
+  name?: string;
+  description?: string;
+  industry?: string;
+  location?: string;
+  website?: string;
+  background_image?: string;
+  contact_person_name?: string;
+  logo?: string;
+  tagline?: string;
+  size?: string;
+  founded_year?: string;
+};
 
 function ProductCards({ businessId }: { businessId: string }) {
   const [products, setProducts] = useState<Product[]>([]);
@@ -46,194 +78,56 @@ function ProductCards({ businessId }: { businessId: string }) {
       {products.map(product => (
         <div key={product.id} className="bg-white rounded-lg shadow p-4 flex flex-col hover:shadow-md transition">
           {product.photo_url ? (
-  <div className="-mx-4 mb-3">
-    <img src={product.photo_url} alt={product.name} className="w-full h-40 object-cover rounded-t-lg" />
-  </div>
-) : (
-  <div className="-mx-4 mb-3">
-    <div className="w-full h-40 bg-gray-100 rounded-t-lg flex items-center justify-center text-gray-400">No Image</div>
-  </div>
-)}
-          <h3 className="font-semibold text-lg text-gray-800 mb-1">{product.name}</h3>
-          <div className="text-indigo-600 font-bold mb-1">
-  {typeof product.price === 'number' && !isNaN(product.price)
-    ? `$${product.price.toFixed(2)}`
-    : product.price && !isNaN(Number(product.price))
-      ? `$${Number(product.price).toFixed(2)}`
-      : 'No price'}
-</div>
-          <div className="text-gray-600 text-sm line-clamp-3 mb-2">{product.description}</div>
-          <div className="mt-auto">
-  <span className={`inline-block px-2 py-1 text-xs rounded font-semibold ${product.availability === 'Available' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-    {product.availability}
-  </span>
-</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { FaBriefcase, FaMapMarkerAlt, FaGlobe, FaEdit, FaCamera, FaUsers, FaCalendar, FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import ImageUploadModal from './ImageUploadModal';
-import EditBusinessNameModal from './EditBusinessNameModal';
-import EditBusinessInfoModal from './EditBusinessInfoModal';
-import EditTaglineModal from './EditTaglineModal';
-import EditAboutModal from './EditAboutModal';
-
-interface Update {
-  id: string;
-  title: string;
-  date: string;
-  content: string;
-}
-
-
-function ResponsiveTabs({ tabs, activeTab, setActiveTab }: { tabs: any[]; activeTab: string; setActiveTab: (id: string) => void }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [visibleCount, setVisibleCount] = useState(tabs.length);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const moreButtonRef = useRef<HTMLButtonElement | null>(null);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-
-  // Close dropdown only when clicking outside
-  useEffect(() => {
-    if (!moreOpen) return;
-    function handlePointerDown(e: PointerEvent) {
-      setTimeout(() => {
-        if (
-          moreButtonRef.current && moreButtonRef.current.contains(e.target as Node)
-        ) return;
-        if (
-          dropdownRef.current && dropdownRef.current.contains(e.target as Node)
-        ) return;
-        setMoreOpen(false);
-      }, 0);
-    }
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [moreOpen]);
-
-  useLayoutEffect(() => {
-    function updateTabs() {
-      if (!containerRef.current) return;
-      const containerWidth = containerRef.current.offsetWidth;
-      let used = 0;
-      let fitCount = tabs.length;
-      for (let i = 0; i < tabs.length; i++) {
-        const tab = tabRefs.current[i];
-        if (!tab) continue;
-        used += tab.offsetWidth;
-        // 80px is the approx width of the 'More' button
-        if (used + 80 > containerWidth) {
-          fitCount = i;
-          break;
-        }
-      }
-      setVisibleCount(fitCount);
-      if (fitCount < tabs.length) {
-        console.log('Tabs moved to More:', tabs.slice(fitCount).map(t => t.label));
-      } else {
-        console.log('All tabs visible');
-      }
-    }
-    updateTabs();
-    // Use ResizeObserver for more robust resize handling
-    const observer = new window.ResizeObserver(updateTabs);
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-    window.addEventListener('resize', updateTabs);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', updateTabs);
-    };
-  }, [tabs]);
-
-  const visibleTabs = tabs.slice(0, visibleCount);
-  const overflowTabs = tabs.slice(visibleCount);
-
-  return (
-    <div className="flex flex-nowrap space-x-4 relative overflow-x-hidden w-full" ref={containerRef}>
-      {visibleTabs.map((tab, i) => (
-        <button
-          key={tab.id}
-          ref={el => { tabRefs.current[i] = el; }}
-          onClick={() => setActiveTab(tab.id)}
-          className={`min-w-[110px] px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 ${activeTab === tab.id ? 'text-black font-semibold border-b-2 border-black' : ''}`}
-        >
-          {tab.label}
-        </button>
-      ))}
-      {/* Close dropdown when clicking outside */}
-      {moreOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setMoreOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-      {overflowTabs.length > 0 && (
-        <div className="relative z-50 ml-4">
-          <button
-            ref={moreButtonRef}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 flex items-center"
-            onClick={e => { e.stopPropagation(); setMoreOpen(v => !v); }}
-            aria-haspopup="true"
-            aria-expanded={moreOpen}
-            type="button"
-          >
-            More <FaChevronDown className="ml-1 w-3 h-3" />
-          </button>
-          {moreOpen && (
-            <div
-              ref={dropdownRef}
-              className="absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg z-50"
-            >
-              {overflowTabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); setMoreOpen(false); }}
-                  className={`block w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 ${activeTab === tab.id ? 'text-black font-semibold' : ''}`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            <div className="-mx-4 mb-3">
+              <img src={product.photo_url} alt={product.name} className="w-full h-40 object-cover rounded-t-lg" />
+            </div>
+          ) : (
+            <div className="-mx-4 mb-3">
+              <div className="w-full h-40 bg-gray-100 rounded-t-lg flex items-center justify-center text-gray-400">No Image</div>
             </div>
           )}
+          <h3 className="font-semibold text-lg text-gray-800 mb-1">{product.name}</h3>
+          <div className="text-indigo-600 font-bold mb-1">
+            {typeof product.price === 'number' && !isNaN(product.price)
+              ? `$${product.price.toFixed(2)}`
+              : product.price && !isNaN(Number(product.price))
+                ? `$${Number(product.price).toFixed(2)}`
+                : 'No price'}
+          </div>
+          <div className="text-gray-600 text-sm line-clamp-3 mb-2">{product.description}</div>
+          <div className="mt-auto">
+            <span className={`inline-block px-2 py-1 text-xs rounded font-semibold ${product.availability === 'Available' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              {product.availability}
+            </span>
+          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }
 
-export default function ProfileTabs({ user, business }: { user: any; business: any }) {
-  const router = useRouter();
+export default function ProfileTabs({ user, business }: { user: UserData; business: BusinessData }) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('home');
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
   const [isBackgroundModalOpen, setIsBackgroundModalOpen] = useState(false);
-  // Removed unused state
+  const [businessDescription, setBusinessDescription] = useState(business.description ?? '');
+  const [showFullHomeDescription, setShowFullHomeDescription] = useState(false);
   const isOwnProfile = session?.user?.username === user?.username;
   const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
-  const [businessName, setBusinessName] = useState(business.name);
   const [isEditAboutModalOpen, setIsEditAboutModalOpen] = useState(false);
-  const [businessDescription, setBusinessDescription] = useState(business.description || '');
-  const [showFullHomeDescription, setShowFullHomeDescription] = useState(false);
   const [isEditInfoModalOpen, setIsEditInfoModalOpen] = useState(false);
-  const [businessWebsite, setBusinessWebsite] = useState(business.website || '');
-  const [businessLocation, setBusinessLocation] = useState(business.location || '');
-  const [businessIndustry, setBusinessIndustry] = useState(business.industry || '');
-  const [businessTagline, setBusinessTagline] = useState(business.tagline || '');
   const [isEditTaglineModalOpen, setIsEditTaglineModalOpen] = useState(false);
+  const [businessName, setBusinessName] = useState(business.name ?? '');
+  const [businessTagline, setBusinessTagline] = useState(business.tagline ?? '');
+  const [businessWebsite, setBusinessWebsite] = useState(business.website ?? '');
+  const [businessLocation, setBusinessLocation] = useState(business.location ?? '');
+  const [businessIndustry, setBusinessIndustry] = useState(business.industry ?? '');
+  const businessSize = business.size ?? 'Not specified';
+  const foundedYear = business.founded_year ?? 'Unknown';
 
-  // Sample updates data - replace with actual data from your backend
-  const updates: Update[] = [
+  const updates: any[] = [
     {
       id: '1',
       title: 'New Product Launch',
@@ -274,7 +168,6 @@ export default function ProfileTabs({ user, business }: { user: any; business: a
       throw new Error('Failed to upload logo');
     }
 
-    // Refresh the page to show the new logo
     window.location.reload();
   };
 
@@ -292,7 +185,6 @@ export default function ProfileTabs({ user, business }: { user: any; business: a
       throw new Error('Failed to upload background image');
     }
 
-    // Refresh the page to show the new background
     window.location.reload();
   };
 
@@ -373,15 +265,15 @@ export default function ProfileTabs({ user, business }: { user: any; business: a
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-gray-600 text-sm mb-5">
                   <div className="flex items-center">
                     <FaBriefcase className="w-4 h-4 mr-1" />
-                    <span>{businessIndustry || 'Not provided'}</span>
+                    <span>{businessIndustry}</span>
                   </div>
                   <div className="flex items-center">
                     <FaMapMarkerAlt className="w-4 h-4 mr-1" />
-                    <span>{businessLocation || 'Not provided'}</span>
+                    <span>{businessLocation}</span>
                   </div>
                   <div className="flex items-center">
                     <FaGlobe className="w-4 h-4 mr-1" />
-                    <span>{businessWebsite || 'Not provided'}</span>
+                    <span>{businessWebsite}</span>
                     {isOwnProfile && (
                       <button
                         onClick={() => setIsEditInfoModalOpen(true)}
@@ -392,16 +284,16 @@ export default function ProfileTabs({ user, business }: { user: any; business: a
                       </button>
                     )}
                   </div>
-                  {business.size && (
+                  {businessSize && (
                     <div className="flex items-center">
                       <FaUsers className="w-4 h-4 mr-1" />
-                      <span>{business.size}</span>
+                      <span>{businessSize}</span>
                     </div>
                   )}
-                  {business.founded_year && (
+                  {foundedYear && (
                     <div className="flex items-center">
                       <FaCalendar className="w-4 h-4 mr-1" />
-                      <span>Founded {business.founded_year}</span>
+                      <span>Founded {foundedYear}</span>
                     </div>
                   )}
                 </div>
@@ -409,13 +301,13 @@ export default function ProfileTabs({ user, business }: { user: any; business: a
                 {isOwnProfile && (
                   <div className="flex gap-4 mt-6">
                     <button
-                      className="px-5 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"
+                      className="px-5 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700"
                       type="button"
                     >
                       Enhance Profile
                     </button>
                     <button
-                      className="px-5 py-2 bg-gray-100 text-gray-800 rounded-lg shadow hover:bg-gray-200 transition"
+                      className="bg-white text-indigo-600 px-4 py-2 rounded-md border border-indigo-600 hover:bg-indigo-50"
                       type="button"
                     >
                       AI Insights
@@ -496,6 +388,26 @@ export default function ProfileTabs({ user, business }: { user: any; business: a
                   }}
                 />
 
+                {/* Edit About Modal */}
+                <EditAboutModal
+                  isOpen={isEditAboutModalOpen}
+                  currentDescription={businessDescription}
+                  onClose={() => setIsEditAboutModalOpen(false)}
+                  onSave={async (desc: string) => {
+                    try {
+                      const res = await fetch('/api/business/details', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ field: 'description', value: desc, userId: user.id }),
+                      });
+                      if (!res.ok) throw new Error('Failed to update description');
+                      setBusinessDescription(desc);
+                    } catch (e) {
+                      alert('Failed to update About section.');
+                    }
+                  }}
+                />
+
                 {!isOwnProfile && (
                   <div className="flex flex-wrap gap-4 mt-4">
                     <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
@@ -513,17 +425,17 @@ export default function ProfileTabs({ user, business }: { user: any; business: a
           <div className="bg-white border-t border-gray-200 shadow-none rounded-xl">
             <div>
               <nav className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
-  <div className="flex space-x-4 overflow-x-auto flex-nowrap w-full scrollbar-hide">
-    {tabs.map((tab) => (
-      <button
-        key={tab.id}
-        onClick={() => setActiveTab(tab.id)}
-        className={`px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 ${activeTab === tab.id ? 'text-black font-semibold border-b-2 border-black' : ''}`}
-      >
-        {tab.label}
-      </button>
-    ))}
-  </div>
+                <div className="flex space-x-4 overflow-x-auto flex-nowrap w-full scrollbar-hide">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 ${activeTab === tab.id ? 'text-black font-semibold border-b-2 border-black' : ''}`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
                 {isOwnProfile && (
                   <div className="flex items-center space-x-2">
                     <button className="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-md text-sm font-medium">
@@ -542,29 +454,29 @@ export default function ProfileTabs({ user, business }: { user: any; business: a
             </div>
             <div className="p-4 sm:p-6">
               {activeTab === 'home' && (
-  <div className="space-y-6">
-    {/* About Us Section */}
-    <div className="bg-white shadow rounded-lg p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-2">Overview</h3>
-      <div className="mb-4">
-  <div
-    className={`text-gray-600 ${showFullHomeDescription ? '' : 'line-clamp-5'} overflow-hidden`}
-    style={{ display: '-webkit-box', WebkitLineClamp: showFullHomeDescription ? 'none' : 5, WebkitBoxOrient: 'vertical' }}
-    dangerouslySetInnerHTML={{ __html: businessDescription || 'No about info yet.' }}
-  />
-  {businessDescription && (
-    <button
-      className="text-indigo-600 hover:underline text-sm mt-1"
-      onClick={() => setShowFullHomeDescription(v => !v)}
-    >
-      {showFullHomeDescription ? 'View less' : 'View more'}
-    </button>
-  )}
-</div>
-    </div>
-    {/* Updates Section */}
-    <div className="bg-white shadow rounded-lg p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Updates</h3>
+                <div className="space-y-6">
+                  {/* About Us Section */}
+                  <div className="bg-white shadow rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Overview</h3>
+                    <div className="mb-4">
+                      <div
+                        className={`text-gray-600 ${showFullHomeDescription ? '' : 'line-clamp-5'} overflow-hidden`}
+                        style={{ display: '-webkit-box', WebkitLineClamp: showFullHomeDescription ? 'none' : 5, WebkitBoxOrient: 'vertical' }}
+                        dangerouslySetInnerHTML={{ __html: businessDescription || 'No about info yet.' }}
+                      />
+                      {businessDescription && (
+                        <button
+                          className="text-indigo-600 hover:underline text-sm mt-1"
+                          onClick={() => setShowFullHomeDescription(v => !v)}
+                        >
+                          {showFullHomeDescription ? 'View less' : 'View more'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {/* Updates Section */}
+                  <div className="bg-white shadow rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Updates</h3>
                     <div className="space-y-4">
                       {updates.map((update) => (
                         <div key={update.id} className="border-b border-gray-200 pb-4">
@@ -582,57 +494,39 @@ export default function ProfileTabs({ user, business }: { user: any; business: a
                 </div>
               )}
               {activeTab === 'about' && (
-  <div>
-    <div className="flex items-center">
-      <h2 className="text-xl font-semibold text-gray-800">Overview</h2>
-      {isOwnProfile && (
-        <button
-          className="ml-2 text-gray-400 hover:text-indigo-600"
-          aria-label="Edit about section"
-          onClick={() => setIsEditAboutModalOpen(true)}
-        >
-          <FaEdit className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-    <div className="text-gray-600 mt-2" dangerouslySetInnerHTML={{ __html: businessDescription || 'No about info yet.' }} />
-    <EditAboutModal
-      isOpen={isEditAboutModalOpen}
-      currentDescription={businessDescription}
-      onClose={() => setIsEditAboutModalOpen(false)}
-      onSave={async (desc: string) => {
-        try {
-          const res = await fetch('/api/business/details', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ field: 'description', value: desc, userId: user.id }),
-          });
-          if (!res.ok) throw new Error('Failed to update description');
-          setBusinessDescription(desc);
-        } catch (e) {
-          alert('Failed to update About section.');
-        }
-      }}
-    />
-  </div>
-)}
+                <div>
+                  <div className="flex items-center">
+                    <h2 className="text-xl font-semibold text-gray-800">Overview</h2>
+                    {isOwnProfile && (
+                      <button
+                        onClick={() => setIsEditAboutModalOpen(true)}
+                        className="ml-2 text-gray-400 hover:text-indigo-600"
+                        aria-label="Edit about section"
+                      >
+                        <FaEdit className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="text-gray-600 mt-2" dangerouslySetInnerHTML={{ __html: businessDescription || 'No about info yet.' }} />
+                </div>
+              )}
               {activeTab === 'products' && (
-  <div>
-    <div className="flex items-center mb-4">
-      <h2 className="text-xl font-semibold text-gray-800">Products/Services</h2>
-      {isOwnProfile && (
-        <button
-          className="ml-2 text-gray-400 hover:text-indigo-600"
-          aria-label="Edit products/services"
-          onClick={() => router.push('/products') }
-        >
-          <FaEdit className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-    <ProductCards businessId={business.id} />
-  </div>
-)}
+                <div>
+                  <div className="flex items-center mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800">Products/Services</h2>
+                    {isOwnProfile && (
+                      <button
+                        onClick={() => router.push('/products') }
+                        className="ml-2 text-gray-400 hover:text-indigo-600"
+                        aria-label="Edit products/services"
+                      >
+                        <FaEdit className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <ProductCards businessId={business.id} />
+                </div>
+              )}
               {activeTab === 'people' && (
                 <div>
                   <div className="flex items-center">
@@ -654,7 +548,7 @@ export default function ProfileTabs({ user, business }: { user: any; business: a
                     {isOwnProfile && <EditButton onClick={() => {}} />}
                   </div>
                   <div className="mt-2">
-                    <p className="text-gray-600">Website: {business.website || 'Not provided'}</p>
+                    <p className="text-gray-600">Website: {businessWebsite}</p>
                     {business.contact_person_name && (
                       <p className="text-gray-600">Contact: {business.contact_person_name}</p>
                     )}
@@ -698,20 +592,7 @@ export default function ProfileTabs({ user, business }: { user: any; business: a
 
         {/* Sidebar (Right) */}
         <aside className="col-span-12 md:col-span-4 lg:col-span-3 space-y-4">
-          <div className="bg-white border border-gray-200 rounded-lg p-4 sticky top-4">
-            <div className="flex items-center">
-              <h3 className="text-lg font-semibold text-gray-800">Updates & Insights</h3>
-              {isOwnProfile && <EditButton onClick={() => {}} />}
-            </div>
-            <div className="space-y-4 mt-4">
-              <div className="bg-gray-100 p-4 rounded-md">
-                <p className="text-gray-600">Ad Space or Latest Update Here</p>
-              </div>
-              <div className="bg-gray-100 p-4 rounded-md">
-                <p className="text-gray-600">Analytics Snapshot Coming Soon</p>
-              </div>
-            </div>
-          </div>
+          {/* Removed Updates & Insights section as per user request */}
         </aside>
       </div>
     </div>

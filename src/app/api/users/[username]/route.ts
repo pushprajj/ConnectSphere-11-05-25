@@ -20,7 +20,7 @@ export async function GET(
 
     // Query the database for the specific user with the correct columns
     const result = await client.query(
-      'SELECT id, username, email, full_name, business_name FROM users WHERE LOWER(username) = LOWER($1)',
+      'SELECT id, username, email, full_name FROM users WHERE LOWER(username) = LOWER($1)',
       [username]
     );
 

@@ -30,6 +30,9 @@ export const authOptions: NextAuthOptions = {
             };
           }
           return null;
+        } catch (err) {
+          console.error('Auth error in authorize:', err);
+          return null;
         } finally {
           client.release();
         }
@@ -59,7 +62,7 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async redirect({ url, baseUrl, token }) {
+    async redirect({ url, baseUrl, token }: { url: string; baseUrl: string; token?: any }) {
       if (url.startsWith('/') && token?.id) return `${baseUrl}${url}`;
       if (token?.id) return `${baseUrl}/dashboard`;
       return `${baseUrl}/auth/signin`;

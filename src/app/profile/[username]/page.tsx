@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useParams } from 'next/navigation';
-import BusinessDetails from '@/components/BusinessDetails';
+import { useParams, usePathname } from 'next/navigation';
 import ProfileTabs from '@/components/ProfileTabs';
+import DashboardNavWrapper from '@/app/dashboard/DashboardNavWrapper';
+import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 
 type PageParams = {
   [key: string]: string | string[];
@@ -12,14 +12,15 @@ type PageParams = {
 };
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
   const params = useParams<PageParams>();
+  const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('ProfilePage rendered on pathname:', pathname);
     async function fetchProfile() {
       try {
         setLoading(true);
@@ -81,8 +82,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <ProfileTabs user={user} business={business} />
-    </div>
+    <DashboardNavWrapper>
+      <AuthenticatedLayout>
+        <ProfileTabs user={user} business={business} />
+      </AuthenticatedLayout>
+    </DashboardNavWrapper>
   );
 } 
