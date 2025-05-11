@@ -1,16 +1,18 @@
             import { useSession } from 'next-auth/react';
+import type { Session } from 'next-auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Business } from '@/types/Business';
-import { FiHome, FiBox, FiBarChart2, FiShoppingCart, FiUsers, FiGlobe, FiFolder, FiMapPin } from 'react-icons/fi';
+import { FiHome, FiBox, FiBarChart2, FiShoppingCart, FiUsers, FiGlobe, FiFolder, FiMapPin, FiUser } from 'react-icons/fi';
 
-const navItems = [
+const getNavItems = (session: Session | null) => [
   { name: 'Dashboard', href: '/dashboard', icon: <FiHome size={22}/> },
-  { name: 'Products', href: '/dashboard/products', icon: <FiBox size={22}/> },
-  { name: 'Orders', href: '/dashboard/orders', icon: <FiShoppingCart size={22}/> },
-  { name: 'Customers', href: '/dashboard/customers', icon: <FiUsers size={22}/> },
+  { name: 'Profile', href: `/${session?.user?.name?.toLowerCase().replace(/\s+/g, '') || 'profile'}`, icon: <FiUser size={22}/> },
+  { name: 'Products', href: '/products', icon: <FiBox size={22}/> },
+  { name: 'Sales', href: '/dashboard/sales', icon: <FiShoppingCart size={22}/> },
+  { name: 'Procurement', href: '/dashboard/procurement', icon: <FiUsers size={22}/> },
   { name: 'Analytics', href: '/dashboard/analytics', icon: <FiBarChart2 size={22}/> },
   { name: 'Intranet', href: '/dashboard/intranet', icon: <FiGlobe size={22}/> },
   { name: 'Resources', href: '/dashboard/resources', icon: <FiFolder size={22}/> },
@@ -136,7 +138,7 @@ export default function DashboardNavbar() {
       </div>
       
       <nav className="flex-1 flex flex-col py-4">
-        {navItems.map((item) => {
+        {getNavItems(session).map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
