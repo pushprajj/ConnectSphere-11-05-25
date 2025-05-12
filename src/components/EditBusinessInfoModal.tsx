@@ -61,7 +61,7 @@ const EditBusinessInfoModal: React.FC<EditBusinessInfoModalProps> = ({
         <label className="block mb-2 text-sm font-medium">Industry</label>
         <input
           type="text"
-          className="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           value={industry}
           onChange={e => setIndustry(e.target.value)}
           disabled={loading}
@@ -76,11 +76,11 @@ const EditBusinessInfoModal: React.FC<EditBusinessInfoModalProps> = ({
             Cancel
           </button>
           <button
-            className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
             onClick={handleSave}
             disabled={loading}
           >
-            {loading ? 'Saving...' : 'Save'}
+            Save
           </button>
         </div>
       </div>

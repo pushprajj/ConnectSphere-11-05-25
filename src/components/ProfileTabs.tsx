@@ -273,53 +273,53 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
     window.location.reload();
   };
 
+  const handleSaveBusinessName = async (newName: string) => {
+    if (!business || !business.id) {
+      console.error('Business ID not found');
+      return;
+    }
+    try {
+      const response = await fetch('/api/business/details', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ businessId: business.id, updates: { name: newName } }),
+      });
+      console.log('Update business name response:', response.status, await response.json());
+      if (response.ok) {
+        await fetchBusiness(); // Re-fetch to ensure latest data
+      }
+    } catch (error) {
+      console.error('Error updating business name:', error);
+    }
+  };
+
   const handleSaveBusinessInfo = async (website: string, location: string, industry: string) => {
     if (!business || !business.id) {
       console.error('Business ID not found');
       return;
     }
     try {
-      if (website) {
-        const response = await fetch('/api/business/details', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ field: 'website', value: website, userId: user.id }),
-        });
-        console.log('Update website response:', response.status, await response.json());
-        if (response.ok) {
-          setBusinessWebsite(website);
-          await fetchBusiness(); // Re-fetch to ensure latest data
-        }
-      }
-      if (location) {
-        const response = await fetch('/api/business/details', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ field: 'location', value: location, userId: user.id }),
-        });
-        console.log('Update location response:', response.status, await response.json());
-        if (response.ok) {
-          setBusinessLocation(location);
-          await fetchBusiness(); // Re-fetch to ensure latest data
-        }
-      }
-      if (industry) {
-        const response = await fetch('/api/business/details', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ field: 'industry', value: industry, userId: user.id }),
-        });
-        console.log('Update industry response:', response.status, await response.json());
-        if (response.ok) {
-          setBusinessIndustry(industry);
-          await fetchBusiness(); // Re-fetch to ensure latest data
-        }
+      const updates: Record<string, any> = {};
+      if (website) updates.website = website;
+      if (location) updates.location = location;
+      if (industry) updates.industry = industry;
+      if (Object.keys(updates).length === 0) return;
+      console.log('Sending update request for businessId:', business.id, 'with updates:', updates);
+      const response = await fetch('/api/business/details', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ businessId: business.id, updates }),
+      });
+      console.log('API response status:', response.status, 'response body:', await response.json());
+      if (response.ok) {
+        await fetchBusiness(); // Re-fetch to ensure latest data
+      } else {
+        console.error('API update failed with status:', response.status);
       }
     } catch (error) {
-      console.error('Error updating business info:', error);
+      console.error('Error in handleSaveBusinessInfo:', error);
     }
   };
 
@@ -333,12 +333,10 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ field: 'tagline', value: newTagline, userId: user.id }),
+        body: JSON.stringify({ businessId: business.id, updates: { tagline: newTagline } }),
       });
       console.log('Update tagline response:', response.status, await response.json());
       if (response.ok) {
-        setBusinessTagline(newTagline);
-        console.log('Tagline saved locally, re-fetching data');
         await fetchBusiness(); // Re-fetch to ensure latest data
       }
     } catch (error) {
@@ -515,23 +513,7 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                   isOpen={isEditNameModalOpen}
                   currentName={businessName}
                   onClose={() => setIsEditNameModalOpen(false)}
-                  onSave={async (newName: string) => {
-                    try {
-                      const formData = new FormData();
-                      formData.append('userId', user.id);
-                      formData.append('name', newName);
-                      const res = await fetch('/api/business', {
-                        method: 'PUT',
-                        body: formData,
-                        credentials: 'include',
-                      });
-                      console.log('Update business name response:', res.status, await res.json());
-                      if (!res.ok) throw new Error('Failed to update business name');
-                      setBusinessName(newName);
-                    } catch (e) {
-                      alert('Failed to update business name.');
-                    }
-                  }}
+                  onSave={handleSaveBusinessName}
                 />
 
                 {/* Edit About Modal */}
@@ -540,18 +522,27 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                   currentDescription={businessDescription}
                   onClose={() => setIsEditAboutModalOpen(false)}
                   onSave={async (desc: string) => {
+                    if (!business || !business.id) {
+                      console.error('Business ID not found for description update');
+                      return;
+                    }
                     try {
-                      const res = await fetch('/api/business/details', {
+                      console.log('Sending description update request for businessId:', business.id, 'with description:', desc);
+                      const response = await fetch('/api/business/details', {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify({ field: 'description', value: desc, userId: user.id }),
+                        body: JSON.stringify({ businessId: business.id, updates: { description: desc } }),
                       });
-                      console.log('Update about response:', res.status, await res.json());
-                      if (!res.ok) throw new Error('Failed to update description');
-                      setBusinessDescription(desc);
-                    } catch (e) {
-                      alert('Failed to update About section.');
+                      console.log('API response for description update: status', response.status, 'body:', await response.json());
+                      if (response.ok) {
+                        setBusinessDescription(desc);
+                        await fetchBusiness(); // Re-fetch to ensure latest data
+                      } else {
+                        console.error('Description update failed with status:', response.status);
+                      }
+                    } catch (error) {
+                      console.error('Error updating description:', error);
                     }
                   }}
                 />
