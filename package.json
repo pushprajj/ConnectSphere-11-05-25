@@ -11,7 +11,7 @@
     "prepare": "husky",
     "migrate": "ts-node --project tsconfig.migrations.json src/lib/migrations/run.ts",
     "lint": "next lint",
-    "test": "echo 'No tests defined'"
+    "test": "jest"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": "eslint --fix"
@@ -30,7 +30,10 @@
     "react-quill": "^2.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^14.0.0",
     "@types/bcryptjs": "^3.0.0",
+    "@types/jest": "^29.5.14",
     "@types/node": "^20",
     "@types/pg": "^8.11.13",
     "@types/react": "^18",
@@ -39,10 +42,13 @@
     "eslint-config-next": "14.2.3",
     "eslint-config-prettier": "^9.1.0",
     "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "lint-staged": "^15.5.1",
     "postcss": "^8",
     "prettier": "^3.2.5",
     "tailwindcss": "^3.4.1",
+    "ts-jest": "^29.3.2",
     "ts-node": "^10.9.2",
     "typescript": "^5"
   }
