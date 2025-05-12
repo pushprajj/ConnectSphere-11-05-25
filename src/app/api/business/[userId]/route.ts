@@ -21,6 +21,7 @@ export async function GET(
         website, 
         logo, 
         background_image,
+        tagline,
         contact_person,
         contact_email,
         contact_phone

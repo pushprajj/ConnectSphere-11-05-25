@@ -9,7 +9,7 @@ import { FiHome, FiBox, FiBarChart2, FiShoppingCart, FiUsers, FiGlobe, FiFolder,
 
 const getNavItems = (session: Session | null) => [
   { name: 'Dashboard', href: '/dashboard', icon: <FiHome size={22}/> },
-  { name: 'Profile', href: `/${session?.user?.name?.toLowerCase().replace(/\s+/g, '') || 'profile'}`, icon: <FiUser size={22}/> },
+  { name: 'Profile', href: `/profile/${session?.user?.username}`, icon: <FiUser size={22}/> },
   { name: 'Products', href: '/products', icon: <FiBox size={22}/> },
   { name: 'Sales', href: '/dashboard/sales', icon: <FiShoppingCart size={22}/> },
   { name: 'Procurement', href: '/dashboard/procurement', icon: <FiUsers size={22}/> },

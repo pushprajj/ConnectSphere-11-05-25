@@ -4,6 +4,7 @@ import pool from '@/lib/db';
 export async function PUT(request: NextRequest) {
   try {
     const { field, value, userId } = await request.json();
+    console.log(`Received update request for field: ${field}, value: ${value}, userId: ${userId}`);
 
     if (!field || !userId) {
       return NextResponse.json({ error: 'Field and userId are required' }, { status: 400 });
@@ -18,10 +19,12 @@ export async function PUT(request: NextRequest) {
       }
 
       // Update the business details
+      console.log(`Executing UPDATE query for field: ${field}`);
       await client.query(
         `UPDATE businesses SET ${field} = $1 WHERE owner_id = $2`,
         [value, userId]
       );
+      console.log('Update query executed successfully');
 
       return NextResponse.json({ success: true });
     } finally {

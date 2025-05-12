@@ -56,9 +56,10 @@ function ProductCards({ businessId }: { businessId: string }) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/products');
+        const res = await fetch('/api/products', { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
+        console.log('Fetch products response:', res.status, data);
         setProducts((data.products || []).filter((p: Product) => p.business_id && p.business_id != '' && p.business_id != '0' && p.business_id != null && p.business_id == businessId));
       } catch (e) {
         setError('Failed to load products');
@@ -124,8 +125,6 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
   const [businessWebsite, setBusinessWebsite] = useState(business.website ?? '');
   const [businessLocation, setBusinessLocation] = useState(business.location ?? '');
   const [businessIndustry, setBusinessIndustry] = useState(business.industry ?? '');
-  const businessSize = business.size ?? 'Not specified';
-  const foundedYear = business.founded_year ?? 'Unknown';
 
   const updates: any[] = [
     {
@@ -154,6 +153,30 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
   const defaultBackground = '/default-background.jpg';
   const defaultLogo = '/default-logo.png';
 
+  const fetchBusiness = async () => {
+    try {
+      const res = await fetch(`/api/business/${user.id}`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        console.log('Fetched business data:', { tagline: data.tagline });
+        setBusinessDescription(data.description ?? '');
+        setBusinessName(data.name ?? '');
+        setBusinessTagline(data.tagline ?? '');
+        setBusinessWebsite(data.website ?? '');
+        setBusinessLocation(data.location ?? '');
+        setBusinessIndustry(data.industry ?? '');
+      } else {
+        console.error('Failed to fetch business data:', await res.json());
+      }
+    } catch (error) {
+      console.error('Error fetching business data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBusiness();
+  }, [user.id, fetchBusiness]);
+
   const handleLogoUpload = async (file: File) => {
     const formData = new FormData();
     formData.append('logo', file);
@@ -162,8 +185,9 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
     const response = await fetch('/api/business/logo', {
       method: 'POST',
       body: formData,
+      credentials: 'include',
     });
-
+    console.log('Logo upload response:', response.status, await response.json());
     if (!response.ok) {
       throw new Error('Failed to upload logo');
     }
@@ -179,13 +203,87 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
     const response = await fetch('/api/business/background', {
       method: 'POST',
       body: formData,
+      credentials: 'include',
     });
-
+    console.log('Background upload response:', response.status, await response.json());
     if (!response.ok) {
       throw new Error('Failed to upload background image');
     }
 
     window.location.reload();
+  };
+
+  const handleSaveBusinessInfo = async (website: string, location: string, industry: string) => {
+    if (!business || !business.id) {
+      console.error('Business ID not found');
+      return;
+    }
+    try {
+      if (website) {
+        const response = await fetch('/api/business/details', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ field: 'website', value: website, userId: user.id }),
+        });
+        console.log('Update website response:', response.status, await response.json());
+        if (response.ok) {
+          setBusinessWebsite(website);
+          await fetchBusiness(); // Re-fetch to ensure latest data
+        }
+      }
+      if (location) {
+        const response = await fetch('/api/business/details', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ field: 'location', value: location, userId: user.id }),
+        });
+        console.log('Update location response:', response.status, await response.json());
+        if (response.ok) {
+          setBusinessLocation(location);
+          await fetchBusiness(); // Re-fetch to ensure latest data
+        }
+      }
+      if (industry) {
+        const response = await fetch('/api/business/details', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ field: 'industry', value: industry, userId: user.id }),
+        });
+        console.log('Update industry response:', response.status, await response.json());
+        if (response.ok) {
+          setBusinessIndustry(industry);
+          await fetchBusiness(); // Re-fetch to ensure latest data
+        }
+      }
+    } catch (error) {
+      console.error('Error updating business info:', error);
+    }
+  };
+
+  const handleSaveTagline = async (newTagline: string) => {
+    if (!business || !business.id) {
+      console.error('Business ID not found');
+      return;
+    }
+    try {
+      const response = await fetch('/api/business/details', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ field: 'tagline', value: newTagline, userId: user.id }),
+      });
+      console.log('Update tagline response:', response.status, await response.json());
+      if (response.ok) {
+        setBusinessTagline(newTagline);
+        console.log('Tagline saved locally, re-fetching data');
+        await fetchBusiness(); // Re-fetch to ensure latest data
+      }
+    } catch (error) {
+      console.error('Error updating tagline:', error);
+    }
   };
 
   const EditButton = ({ onClick }: { onClick: () => void }) => (
@@ -284,18 +382,6 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                       </button>
                     )}
                   </div>
-                  {businessSize && (
-                    <div className="flex items-center">
-                      <FaUsers className="w-4 h-4 mr-1" />
-                      <span>{businessSize}</span>
-                    </div>
-                  )}
-                  {foundedYear && (
-                    <div className="flex items-center">
-                      <FaCalendar className="w-4 h-4 mr-1" />
-                      <span>Founded {foundedYear}</span>
-                    </div>
-                  )}
                 </div>
 
                 {isOwnProfile && (
@@ -320,50 +406,17 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                   isOpen={isEditTaglineModalOpen}
                   currentTagline={businessTagline}
                   onClose={() => setIsEditTaglineModalOpen(false)}
-                  onSave={async (newTagline: string) => {
-                    try {
-                      const res = await fetch('/api/business/details', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ field: 'tagline', value: newTagline, userId: user.id }),
-                      });
-                      if (!res.ok) throw new Error('Failed to update tagline');
-                      setBusinessTagline(newTagline);
-                    } catch (e) {
-                      alert('Failed to update tagline.');
-                    }
-                  }}
+                  onSave={handleSaveTagline}
                 />
 
                 {/* Edit Business Info Modal */}
                 <EditBusinessInfoModal
                   isOpen={isEditInfoModalOpen}
+                  onClose={() => setIsEditInfoModalOpen(false)}
+                  onSave={handleSaveBusinessInfo}
                   currentWebsite={businessWebsite}
                   currentLocation={businessLocation}
                   currentIndustry={businessIndustry}
-                  onClose={() => setIsEditInfoModalOpen(false)}
-                  onSave={async (website, location, industry) => {
-                    try {
-                      const updateField = async (field: string, value: string) => {
-                        const res = await fetch('/api/business/details', {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ field, value, userId: user.id }),
-                        });
-                        if (!res.ok) throw new Error(`Failed to update ${field}`);
-                      };
-                      await Promise.all([
-                        updateField('website', website),
-                        updateField('location', location),
-                        updateField('industry', industry),
-                      ]);
-                      setBusinessWebsite(website);
-                      setBusinessLocation(location);
-                      setBusinessIndustry(industry);
-                    } catch (e) {
-                      alert('Failed to update business info.');
-                    }
-                  }}
                 />
 
                 {/* Edit Business Name Modal */}
@@ -379,7 +432,9 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                       const res = await fetch('/api/business', {
                         method: 'PUT',
                         body: formData,
+                        credentials: 'include',
                       });
+                      console.log('Update business name response:', res.status, await res.json());
                       if (!res.ok) throw new Error('Failed to update business name');
                       setBusinessName(newName);
                     } catch (e) {
@@ -398,8 +453,10 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                       const res = await fetch('/api/business/details', {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
                         body: JSON.stringify({ field: 'description', value: desc, userId: user.id }),
                       });
+                      console.log('Update about response:', res.status, await res.json());
                       if (!res.ok) throw new Error('Failed to update description');
                       setBusinessDescription(desc);
                     } catch (e) {
