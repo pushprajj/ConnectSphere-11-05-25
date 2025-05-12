@@ -1,15 +1,23 @@
 // src/components/ProfileTabs.tsx
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FaBriefcase, FaMapMarkerAlt, FaGlobe, FaEdit, FaCamera, FaPhone, FaEnvelope, FaClock } from 'react-icons/fa';
+import { FaBriefcase, FaMapMarkerAlt, FaGlobe, FaEdit, FaCamera, FaPhone, FaEnvelope, FaClock, FaUser } from 'react-icons/fa';
 import ImageUploadModal from './ImageUploadModal';
 import EditBusinessNameModal from './EditBusinessNameModal';
 import EditBusinessInfoModal from './EditBusinessInfoModal';
 import EditTaglineModal from './EditTaglineModal';
 import EditAboutModal from './EditAboutModal';
+import Script from 'next/script'; // Import Script component for loading Google Maps API
+
+// Add type declaration for window.google to avoid property access errors
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 interface Product {
   id?: string;
@@ -47,6 +55,11 @@ type BusinessData = {
   hours?: string;
   contact_phone?: string;
   contact_email?: string;
+  business_street?: string;
+  business_city?: string;
+  business_state?: string;
+  business_zip_code?: string;
+  business_country?: string;
 };
 
 function ProductCards({ businessId, limit = 10 }: { businessId: string, limit?: number }) {
@@ -128,6 +141,39 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
   const [businessWebsite, setBusinessWebsite] = useState(business.website ?? '');
   const [businessLocation, setBusinessLocation] = useState(business.location ?? '');
   const [businessIndustry, setBusinessIndustry] = useState(business.industry ?? '');
+  const [contact, setContact] = useState({
+    contact_person: business.contact_person_name ?? '', // New field for contact person's name
+    street: business.business_street ?? '',
+    city: business.business_city ?? '',
+    state: business.business_state ?? '',
+    business_zip_code: business.business_zip_code ?? '',
+    country: business.business_country ?? '',
+    phone: business.contact_phone ?? '',
+    email: business.contact_email ?? '',
+    website: business.website ?? ''
+  });
+  const [editContact, setEditContact] = useState(contact);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isContactModalOpen) {
+      setContact({
+        contact_person: business.contact_person_name ?? '', // New field for contact person's name
+        street: business.business_street ?? '',
+        city: business.business_city ?? '',
+        state: business.business_state ?? '',
+        business_zip_code: business.business_zip_code ?? '',
+        country: business.business_country ?? '',
+        phone: business.contact_phone ?? '',
+        email: business.contact_email ?? '',
+        website: business.website ?? ''
+      });
+    }
+  }, [business, isContactModalOpen]);
+
+  useEffect(() => {
+    console.log('Contact state updated:', contact);
+  }, [contact]);
 
   const updates: any[] = [
     {
@@ -161,13 +207,24 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
       const res = await fetch(`/api/business/${user.id}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        console.log('Fetched business data:', { tagline: data.tagline });
+        console.log('Fetched business data:', data);
         setBusinessDescription(data.description ?? '');
         setBusinessName(data.name ?? '');
         setBusinessTagline(data.tagline ?? '');
         setBusinessWebsite(data.website ?? '');
         setBusinessLocation(data.location ?? '');
         setBusinessIndustry(data.industry ?? '');
+        setContact({ // Sync contact state with fetched data
+          contact_person: data.contact_person_name ?? '', // New field for contact person's name
+          street: data.business_street ?? '',
+          city: data.business_city ?? '',
+          state: data.business_state ?? '',
+          business_zip_code: data.business_zip_code ?? '',
+          country: data.business_country ?? '',
+          phone: data.contact_phone ?? '',
+          email: data.contact_email ?? '',
+          website: data.website ?? ''
+        });
       } else {
         console.error('Failed to fetch business data:', await res.json());
       }
@@ -298,6 +355,37 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
     </button>
   );
 
+  const mapContainerRef = useRef(null);
+  const [isGoogleApiLoaded, setIsGoogleApiLoaded] = useState(false);
+
+  useEffect(() => {
+    if (isGoogleApiLoaded) {
+      if (mapContainerRef.current && window.google) {
+        const geocoder = new window.google.maps.Geocoder();
+        const address = `${contact.street}, ${contact.city}, ${contact.state}, ${contact.business_zip_code}, ${contact.country}`;
+        console.log('Geocoding address:', address);
+        geocoder.geocode({ address: address }, (results: any, status: string) => {
+          console.log('Geocode status:', status);
+          if (status === 'OK' && results[0]) {
+            console.log('Geocode success, location:', results[0].geometry.location);
+            new window.google.maps.Map(mapContainerRef.current, {
+              center: results[0].geometry.location,
+              zoom: 14
+            });
+          } else {
+            console.error('Geocode failed: ' + status + ', using default location');
+            new window.google.maps.Map(mapContainerRef.current, {
+              center: { lat: -34.397, lng: 150.644 },
+              zoom: 8
+            });
+          }
+        });
+      } else {
+        console.error('Map container or Google API not available');
+      }
+    }
+  }, [isGoogleApiLoaded, contact.street, contact.city, contact.state, contact.business_zip_code, contact.country]);
+
   return (
     <div className="bg-[#f3f2ef] min-h-screen w-full">
       <div className="max-w-[1128px] mx-auto grid grid-cols-12 gap-4 pt-6">
@@ -390,13 +478,13 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                   </div>
                   <div className="flex flex-col items-end text-sm text-gray-500">
                     <div className="flex items-center mb-1">
-                      <FaPhone className="mr-1" /> {business.contact_phone || '123-456-7890'}
+                      <FaPhone className="mr-1" /> {contact.phone || '123-456-7890'}
                     </div>
                     <div className="flex items-center mb-1">
-                      <FaEnvelope className="mr-1" /> {business.contact_email || 'info@company.com'}
+                      <FaEnvelope className="mr-1" /> {contact.email || 'info@company.com'}
                     </div>
                     <div className="flex items-center mb-1">
-                      <FaMapMarkerAlt className="mr-1" /> {business.location || '123 Main St, City, Country'}
+                      <FaMapMarkerAlt className="mr-1" /> {contact.street}, {contact.city}, {contact.state} {contact.business_zip_code}, {contact.country}
                     </div>
                     <div className="flex items-center">
                       <FaClock className="mr-1" /> {business.hours || 'Mon-Fri: 9 AM - 5 PM'}
@@ -468,6 +556,58 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                   }}
                 />
 
+                {/* Edit Contact Modal */}
+                {isContactModalOpen && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-4 rounded shadow-lg w-96">
+                      <h2 className="text-lg font-bold mb-2">Edit Contact</h2>
+                      <input key="contact_person-input" type="text" value={editContact.contact_person} onChange={(e) => { const newValue = e.target.value; console.log('Contact Person changed from', editContact.contact_person, 'to', newValue); setEditContact(prev => ({ ...prev, contact_person: newValue })); }} className="border p-2 w-full mb-2" placeholder="Contact Person" />
+                      <input key="street-input" type="text" value={editContact.street} onChange={(e) => { const newValue = e.target.value; console.log('Street changed from', editContact.street, 'to', newValue); setEditContact(prev => ({ ...prev, street: newValue })); }} className="border p-2 w-full mb-2" placeholder="Street" />
+                      <input key="city-input" type="text" value={editContact.city} onChange={(e) => { const newValue = e.target.value; console.log('City changed from', editContact.city, 'to', newValue); setEditContact(prev => ({ ...prev, city: newValue })); }} className="border p-2 w-full mb-2" placeholder="City" />
+                      <input key="state-input" type="text" value={editContact.state} onChange={(e) => { const newValue = e.target.value; console.log('State changed from', editContact.state, 'to', newValue); setEditContact(prev => ({ ...prev, state: newValue })); }} className="border p-2 w-full mb-2" placeholder="State" />
+                      <input key="business_zip_code-input" type="text" value={editContact.business_zip_code} onChange={(e) => { const newValue = e.target.value; console.log('Business Zip Code changed from', editContact.business_zip_code, 'to', newValue); setEditContact(prev => ({ ...prev, business_zip_code: newValue })); }} className="border p-2 w-full mb-2" placeholder="Zip/Post Code" />
+                      <input key="country-input" type="text" value={editContact.country} onChange={(e) => { const newValue = e.target.value; console.log('Country changed from', editContact.country, 'to', newValue); setEditContact(prev => ({ ...prev, country: newValue })); }} className="border p-2 w-full mb-2" placeholder="Country" />
+                      <input key="phone-input" type="text" value={editContact.phone} onChange={(e) => { const newValue = e.target.value; console.log('Phone changed from', editContact.phone, 'to', newValue); setEditContact(prev => ({ ...prev, phone: newValue })); }} className="border p-2 w-full mb-2" placeholder="Phone" />
+                      <input key="email-input" type="text" value={editContact.email} onChange={(e) => { const newValue = e.target.value; console.log('Email changed from', editContact.email, 'to', newValue); setEditContact(prev => ({ ...prev, email: newValue })); }} className="border p-2 w-full mb-2" placeholder="Email" />
+                      <input key="website-input" type="text" value={editContact.website} onChange={(e) => { const newValue = e.target.value; console.log('Website changed from', editContact.website, 'to', newValue); setEditContact(prev => ({ ...prev, website: newValue })); }} className="border p-2 w-full mb-2" placeholder="Website" />
+                      <button onClick={async () => {
+                        console.log('Sending contact update to API:', { businessId: business.id, updates: editContact });
+                        try {
+                          const response = await fetch('/api/business/details', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ businessId: business.id, updates: {
+                              contact_person: editContact.contact_person, // Added new field
+                              business_street: editContact.street,
+                              business_city: editContact.city,
+                              business_state: editContact.state,
+                              business_zip_code: editContact.business_zip_code,
+                              business_country: editContact.country,
+                              contact_phone: editContact.phone,
+                              contact_email: editContact.email,
+                              website: editContact.website
+                            } })
+                          });
+                          const responseData = await response.json();
+                          console.log('API response for contact save:', responseData);
+                          if (response.ok) {
+                            setContact(editContact); // Update main contact state
+                            await fetchBusiness(); // Sync with server
+                            setIsContactModalOpen(false);
+                          } else {
+                            console.error('Failed to save contact, status:', response.status, 'data:', responseData);
+                            alert('Failed to save contact. Please check console for details.');
+                          }
+                        } catch (error) {
+                          console.error('Error during contact save API call:', error);
+                          alert('Error saving contact. Please check console for details.');
+                        }
+                      }} className="bg-blue-500 text-white px-4 py-2 mr-2">Save</button>
+                      <button onClick={() => setIsContactModalOpen(false)} className="bg-gray-300 px-4 py-2">Cancel</button>
+                    </div>
+                  </div>
+                )}
                 {!isOwnProfile && (
                   <div className="flex flex-wrap gap-4 mt-4">
                     <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
@@ -612,15 +752,56 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
               )}
               {activeTab === 'contact' && (
                 <div>
-                  <div className="flex items-center">
-                    <h2 className="text-xl font-semibold text-gray-800">Contact</h2>
-                    {isOwnProfile && <EditButton onClick={() => {}} />}
-                  </div>
-                  <div className="mt-2">
-                    <p className="text-gray-600">Website: {businessWebsite}</p>
-                    {business.contact_person_name && (
-                      <p className="text-gray-600">Contact: {business.contact_person_name}</p>
-                    )}
+                  <div className="space-y-4">
+                    <div className="p-4 border rounded shadow-md">
+                      <h3 className="text-lg font-semibold mb-2 flex items-center">
+                        Contact Details
+                        {isOwnProfile && (
+                          <button
+                            onClick={() => { console.log('Opening contact modal, copying current contact:', contact); setEditContact({ ...contact }); setIsContactModalOpen(true); }}
+                            className="ml-2 text-gray-500 hover:text-blue-500"
+                            aria-label="Edit Contact"
+                          >
+                            <FaEdit />
+                          </button>
+                        )}
+                      </h3>
+                      {business.contact_person_name && (
+                        <p className="text-gray-600 flex items-center mb-1">
+                          <FaUser className="mr-1" /> Contact Person: {business.contact_person_name}
+                        </p>
+                      )}
+                      <p className="text-gray-600 flex items-center mb-1">
+                        <FaMapMarkerAlt className="mr-1" /> Address: {contact.street}, {contact.city}, {contact.state} {contact.business_zip_code}, {contact.country}
+                      </p>
+                      <p className="text-gray-600 flex items-center mb-1">
+                        <FaPhone className="mr-1" /> Phone: {contact.phone}
+                      </p>
+                      <p className="text-gray-600 flex items-center mb-1">
+                        <FaEnvelope className="mr-1" /> Email: {contact.email}
+                      </p>
+                      <p className="text-gray-600 flex items-center">
+                        <FaGlobe className="mr-1" /> Website: {contact.website}
+                      </p>
+                    </div>
+                    <div className="p-4 border rounded shadow-md mt-4">
+                      <h3 className="text-lg font-semibold mb-2">Map Location</h3>
+                      {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
+                        <div>
+                          <Script
+                            src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+                            strategy="afterInteractive"
+                            onLoad={() => {
+                              console.log('Google Maps API loaded');
+                              setIsGoogleApiLoaded(true);
+                            }}
+                          />
+                          <div ref={mapContainerRef} style={{ height: '400px', width: '100%' }}></div>
+                        </div>
+                      ) : (
+                        <p className="text-red-500">Dynamic map not available. Please ensure NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is set.</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

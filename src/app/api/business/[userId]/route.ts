@@ -20,11 +20,16 @@ export async function GET(
         location, 
         website, 
         logo, 
-        background_image,
-        tagline,
-        contact_person,
-        contact_email,
-        contact_phone
+        background_image, 
+        tagline, 
+        contact_person, 
+        contact_email, 
+        contact_phone, 
+        business_street, 
+        business_city, 
+        business_state, 
+        business_zip_code, 
+        business_country 
       FROM businesses 
       WHERE owner_id = $1`,
       [userId]
