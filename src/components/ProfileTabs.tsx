@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FaBriefcase, FaMapMarkerAlt, FaGlobe, FaEdit, FaCamera, FaUsers, FaCalendar } from 'react-icons/fa';
+import { FaBriefcase, FaMapMarkerAlt, FaGlobe, FaEdit, FaCamera, FaPhone, FaEnvelope, FaClock } from 'react-icons/fa';
 import ImageUploadModal from './ImageUploadModal';
 import EditBusinessNameModal from './EditBusinessNameModal';
 import EditBusinessInfoModal from './EditBusinessInfoModal';
@@ -44,6 +44,9 @@ type BusinessData = {
   tagline?: string;
   size?: string;
   founded_year?: string;
+  hours?: string;
+  contact_phone?: string;
+  contact_email?: string;
 };
 
 function ProductCards({ businessId }: { businessId: string }) {
@@ -335,71 +338,71 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                   )}
                 </div>
                 {/* Business Name */}
-                <div className="flex items-center mb-5">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">{businessName}</h1>
-                  {isOwnProfile && (
-                    <button
-                      onClick={() => setIsEditNameModalOpen(true)}
-                      className="ml-2 text-gray-400 hover:text-indigo-600"
-                      aria-label="Edit business name"
-                    >
-                      <FaEdit className="w-5 h-5" />
-                    </button>
-                  )}
+                <div className="flex justify-between items-start mb-5">
+                  <div className="flex flex-col">
+                    <div className="flex items-center mb-2">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">{businessName}</h1>
+                      {isOwnProfile && (
+                        <button
+                          onClick={() => setIsEditNameModalOpen(true)}
+                          className="ml-2 text-gray-400 hover:text-indigo-600"
+                          aria-label="Edit business name"
+                        >
+                          <FaEdit className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-xl font-medium text-gray-600 m-0">{businessTagline || <span className="italic text-gray-400">Add a tagline</span>}</h3>
+                      {isOwnProfile && (
+                        <button
+                          onClick={() => setIsEditTaglineModalOpen(true)}
+                          className="ml-2 text-gray-400 hover:text-indigo-600"
+                          aria-label="Edit tagline"
+                        >
+                          <FaEdit className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-gray-600 text-sm">
+                      <div className="flex items-center">
+                        <FaBriefcase className="w-4 h-4 mr-1" />
+                        <span>{businessIndustry}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <FaMapMarkerAlt className="w-4 h-4 mr-1" />
+                        <span>{businessLocation}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <FaGlobe className="w-4 h-4 mr-1" />
+                        <span>{businessWebsite}</span>
+                        {isOwnProfile && (
+                          <button
+                            onClick={() => setIsEditInfoModalOpen(true)}
+                            className="ml-2 text-gray-400 hover:text-indigo-600"
+                            aria-label="Edit business info"
+                          >
+                            <FaEdit className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end text-sm text-gray-500">
+                    <div className="flex items-center mb-1">
+                      <FaPhone className="mr-1" /> {business.contact_phone || '123-456-7890'}
+                    </div>
+                    <div className="flex items-center mb-1">
+                      <FaEnvelope className="mr-1" /> {business.contact_email || 'info@company.com'}
+                    </div>
+                    <div className="flex items-center mb-1">
+                      <FaMapMarkerAlt className="mr-1" /> {business.location || '123 Main St, City, Country'}
+                    </div>
+                    <div className="flex items-center">
+                      <FaClock className="mr-1" /> {business.hours || 'Mon-Fri: 9 AM - 5 PM'}
+                    </div>
+                  </div>
                 </div>
-                {/* Tagline */}
-                <div className="flex items-center mb-5">
-                  <h3 className="text-xl font-medium text-gray-600 m-0">{businessTagline || <span className="italic text-gray-400">Add a tagline</span>}</h3>
-                  {isOwnProfile && (
-                    <button
-                      onClick={() => setIsEditTaglineModalOpen(true)}
-                      className="ml-2 text-gray-400 hover:text-indigo-600"
-                      aria-label="Edit tagline"
-                    >
-                      <FaEdit className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-gray-600 text-sm mb-5">
-                  <div className="flex items-center">
-                    <FaBriefcase className="w-4 h-4 mr-1" />
-                    <span>{businessIndustry}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <FaMapMarkerAlt className="w-4 h-4 mr-1" />
-                    <span>{businessLocation}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <FaGlobe className="w-4 h-4 mr-1" />
-                    <span>{businessWebsite}</span>
-                    {isOwnProfile && (
-                      <button
-                        onClick={() => setIsEditInfoModalOpen(true)}
-                        className="ml-2 text-gray-400 hover:text-indigo-600"
-                        aria-label="Edit business info"
-                      >
-                        <FaEdit className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {isOwnProfile && (
-                  <div className="flex gap-4 mt-6">
-                    <button
-                      className="px-5 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700"
-                      type="button"
-                    >
-                      Enhance Profile
-                    </button>
-                    <button
-                      className="bg-white text-indigo-600 px-4 py-2 rounded-md border border-indigo-600 hover:bg-indigo-50"
-                      type="button"
-                    >
-                      AI Insights
-                    </button>
-                  </div>
-                )}
 
                 {/* Edit Tagline Modal */}
                 <EditTaglineModal

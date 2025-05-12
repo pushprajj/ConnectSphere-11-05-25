@@ -10,7 +10,8 @@
     "format:check": "prettier --check .",
     "prepare": "husky",
     "migrate": "ts-node --project tsconfig.migrations.json src/lib/migrations/run.ts",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "echo 'No tests defined'"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": "eslint --fix"
