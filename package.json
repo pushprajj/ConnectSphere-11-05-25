@@ -17,6 +17,8 @@
     "*.{js,ts,jsx,tsx}": "eslint --fix"
   },
   "dependencies": {
+    "@fortawesome/free-brands-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@headlessui/react": "^2.2.2",
     "bcryptjs": "^3.0.2",
     "next": "14.2.3",

@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FaBriefcase, FaMapMarkerAlt, FaGlobe, FaEdit, FaCamera, FaPhone, FaEnvelope, FaClock, FaUser } from 'react-icons/fa';
+import { FaBriefcase, FaMapMarkerAlt, FaGlobe, FaEdit, FaCamera, FaPhone, FaEnvelope, FaClock, FaUser, FaFacebook, FaLinkedin, FaInstagram } from 'react-icons/fa';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXTwitter } from '@fortawesome/free-brands-svg-icons';
 import ImageUploadModal from './ImageUploadModal';
 import EditBusinessNameModal from './EditBusinessNameModal';
 import EditBusinessInfoModal from './EditBusinessInfoModal';
@@ -424,7 +426,7 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                   )}
                 </div>
                 {/* Business Name */}
-                <div className="flex justify-between items-start mb-5">
+                <div className="flex justify-between items-center mb-5">
                   <div className="flex flex-col">
                     <div className="flex items-center mb-2">
                       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">{businessName}</h1>
@@ -439,7 +441,7 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                       )}
                     </div>
                     <div className="flex items-center mb-2">
-                      <h3 className="text-xl font-medium text-gray-600 m-0">{businessTagline || <span className="italic text-gray-400">Add a tagline</span>}</h3>
+                      <h4 className="text-base font-medium text-gray-600 m-0">{businessTagline || <span className="italic text-gray-400">Add a tagline</span>}</h4>
                       {isOwnProfile && (
                         <button
                           onClick={() => setIsEditTaglineModalOpen(true)}
@@ -451,17 +453,8 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                       )}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-gray-600 text-sm">
-                      <div className="flex items-center">
-                        <FaBriefcase className="w-4 h-4 mr-1" />
-                        <span>{businessIndustry}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <FaMapMarkerAlt className="w-4 h-4 mr-1" />
-                        <span>{businessLocation}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <FaGlobe className="w-4 h-4 mr-1" />
-                        <span>{businessWebsite}</span>
+                      <div className="mt-4 flex items-center">
+                        <FaBriefcase className="w-4 h-4 mr-1" /> <span>{businessIndustry}</span>
                         {isOwnProfile && (
                           <button
                             onClick={() => setIsEditInfoModalOpen(true)}
@@ -472,20 +465,35 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                           </button>
                         )}
                       </div>
+                      <div className="mt-4 flex items-center">
+                        <FaMapMarkerAlt className="w-4 h-4 mr-1" /> <span>{businessLocation}</span>
+                      </div>
+                      <div className="mt-4 flex items-center">
+                        <FaGlobe className="w-4 h-4 mr-1" /> <span>{businessWebsite}</span>
+                      </div>
+                      <div className="mt-4">
+                        <div className="flex space-x-4 items-center">
+                          <a href="https://facebook.com/dummy" target="_blank" rel="noopener noreferrer" className="text-blue-600"><FaFacebook className="h-5 w-5" /></a>
+                          <a href="https://x.com/dummy" target="_blank" rel="noopener noreferrer" className="text-black"><FontAwesomeIcon icon={faXTwitter} className="h-5 w-5" /></a>
+                          <a href="https://linkedin.com/company/dummy" target="_blank" rel="noopener noreferrer" className="text-blue-700"><FaLinkedin className="h-5 w-5" /></a>
+                          <a href="https://instagram.com/dummy" target="_blank" rel="noopener noreferrer" className="text-pink-500"><FaInstagram className="h-5 w-5" /></a>
+                          {isOwnProfile && <FaEdit className="text-gray-500 h-5 w-5 cursor-pointer" onClick={() => alert('Edit social media not implemented')} />}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end text-sm text-gray-500">
-                    <div className="flex items-center mb-1">
-                      <FaPhone className="mr-1" /> {contact.phone || '123-456-7890'}
+                  <div className="flex flex-col items-end text-sm text-gray-500 gap-1.5">
+                    <div className="flex items-center space-x-3 mb-1">
+                      <span className="whitespace-nowrap">{contact.phone || '123-456-7890'}</span> <FaPhone />
                     </div>
-                    <div className="flex items-center mb-1">
-                      <FaEnvelope className="mr-1" /> {contact.email || 'info@company.com'}
+                    <div className="flex items-center space-x-3 mb-1">
+                      <span className="whitespace-nowrap">{contact.email || 'info@company.com'}</span> <FaEnvelope />
                     </div>
-                    <div className="flex items-center mb-1">
-                      <FaMapMarkerAlt className="mr-1" /> {contact.street}, {contact.city}, {contact.state} {contact.business_zip_code}, {contact.country}
+                    <div className="flex items-center space-x-3 mb-1">
+                      <span className="whitespace-nowrap">{contact.street}, {contact.city}, {contact.state} {contact.business_zip_code}, {contact.country}</span> <FaMapMarkerAlt />
                     </div>
-                    <div className="flex items-center">
-                      <FaClock className="mr-1" /> {business.hours || 'Mon-Fri: 9 AM - 5 PM'}
+                    <div className="flex items-center space-x-3">
+                      <span className="whitespace-nowrap">{business.hours || 'Mon-Fri: 9 AM - 5 PM'}</span> <FaClock />
                     </div>
                   </div>
                 </div>
@@ -762,17 +770,17 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                           <FaUser className="mr-1" /> Contact Person: {business.contact_person_name}
                         </p>
                       )}
-                      <p className="text-sm text-gray-600 flex items-center mb-1">
-                        <FaMapMarkerAlt className="mr-1" /> Address: {contact.street}, {contact.city}, {contact.state} {contact.business_zip_code}, {contact.country}
+                      <p className="text-sm text-gray-600 flex items-center space-x-3 justify-between mb-1">
+                        <span className="whitespace-nowrap">{contact.street}, {contact.city}, {contact.state} {contact.business_zip_code}, {contact.country}</span> <FaMapMarkerAlt />
                       </p>
-                      <p className="text-sm text-gray-600 flex items-center mb-1">
-                        <FaPhone className="mr-1" /> Phone: {contact.phone}
+                      <p className="text-sm text-gray-600 flex items-center space-x-3 justify-between mb-1">
+                        <span className="whitespace-nowrap">{contact.phone}</span> <FaPhone />
                       </p>
-                      <p className="text-sm text-gray-600 flex items-center mb-1">
-                        <FaEnvelope className="mr-1" /> Email: {contact.email}
+                      <p className="text-sm text-gray-600 flex items-center space-x-3 justify-between mb-1">
+                        <span className="whitespace-nowrap">{contact.email}</span> <FaEnvelope />
                       </p>
-                      <p className="text-sm text-gray-600 flex items-center">
-                        <FaGlobe className="mr-1" /> Website: {contact.website}
+                      <p className="text-sm text-gray-600 flex items-center space-x-3">
+                        <span className="whitespace-nowrap">{contact.website}</span> <FaGlobe />
                       </p>
                     </div>
                     <div className="p-4 border rounded shadow-md mt-4">
