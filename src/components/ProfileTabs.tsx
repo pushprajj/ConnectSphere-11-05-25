@@ -49,7 +49,7 @@ type BusinessData = {
   contact_email?: string;
 };
 
-function ProductCards({ businessId }: { businessId: string }) {
+function ProductCards({ businessId, limit = 10 }: { businessId: string, limit?: number }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +63,7 @@ function ProductCards({ businessId }: { businessId: string }) {
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
         console.log('Fetch products response:', res.status, data);
-        setProducts((data.products || []).filter((p: Product) => p.business_id && p.business_id != '' && p.business_id != '0' && p.business_id != null && p.business_id == businessId));
+        setProducts((data.products || []).filter((p: Product) => p.business_id && p.business_id != '' && p.business_id != '0' && p.business_id != null && p.business_id == businessId).slice(0, limit));
       } catch (e) {
         setError('Failed to load products');
       } finally {
@@ -71,7 +71,7 @@ function ProductCards({ businessId }: { businessId: string }) {
       }
     }
     fetchProducts();
-  }, [businessId]);
+  }, [businessId, limit]);
 
   if (loading) return <div className="text-gray-500">Loading products...</div>;
   if (error) return <div className="text-red-500">{error}</div>;
@@ -514,41 +514,50 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
             </div>
             <div className="p-4 sm:p-6">
               {activeTab === 'home' && (
-                <div className="space-y-6">
-                  {/* About Us Section */}
-                  <div className="bg-white shadow rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Overview</h3>
-                    <div className="mb-4">
-                      <div
-                        className={`text-gray-600 ${showFullHomeDescription ? '' : 'line-clamp-5'} overflow-hidden`}
-                        style={{ display: '-webkit-box', WebkitLineClamp: showFullHomeDescription ? 'none' : 5, WebkitBoxOrient: 'vertical' }}
-                        dangerouslySetInnerHTML={{ __html: businessDescription || 'No about info yet.' }}
-                      />
-                      {businessDescription && (
-                        <button
-                          className="text-indigo-600 hover:underline text-sm mt-1"
-                          onClick={() => setShowFullHomeDescription(v => !v)}
-                        >
-                          {showFullHomeDescription ? 'View less' : 'View more'}
-                        </button>
-                      )}
+                <div>
+                  {/* Existing home tab content */}
+                  <div className="space-y-6">
+                    {/* About Us Section */}
+                    <div className="bg-white shadow rounded-lg p-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Overview</h3>
+                      <div className="mb-4">
+                        <div
+                          className={`text-gray-600 ${showFullHomeDescription ? '' : 'line-clamp-5'} overflow-hidden`}
+                          style={{ display: '-webkit-box', WebkitLineClamp: showFullHomeDescription ? 'none' : 5, WebkitBoxOrient: 'vertical' }}
+                          dangerouslySetInnerHTML={{ __html: businessDescription || 'No about info yet.' }}
+                        />
+                        {businessDescription && (
+                          <button
+                            className="text-indigo-600 hover:underline text-sm mt-1"
+                            onClick={() => setShowFullHomeDescription(v => !v)}
+                          >
+                            {showFullHomeDescription ? 'View less' : 'View more'}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  {/* Updates Section */}
-                  <div className="bg-white shadow rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Updates</h3>
-                    <div className="space-y-4">
-                      {updates.map((update) => (
-                        <div key={update.id} className="border-b border-gray-200 pb-4">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-md font-medium text-gray-900">
-                              {update.title}
-                            </h4>
-                            <span className="text-sm text-gray-500">{update.date}</span>
+                    {/* Updates Section */}
+                    <div className="bg-white shadow rounded-lg p-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Updates</h3>
+                      <div className="space-y-4">
+                        {updates.map((update) => (
+                          <div key={update.id} className="border-b border-gray-200 pb-4">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-md font-medium text-gray-900">
+                                {update.title}
+                              </h4>
+                              <span className="text-sm text-gray-500">{update.date}</span>
+                            </div>
+                            <p className="mt-2 text-gray-600">{update.content}</p>
                           </div>
-                          <p className="mt-2 text-gray-600">{update.content}</p>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    </div>
+                    {/* Featured Products Section */}
+                    <div className="bg-white shadow rounded-lg p-6 mt-8">
+                      <h2 className="text-lg font-semibold mb-4">Featured Products</h2>
+                      <ProductCards businessId={business.id} limit={4} />
+                      <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('products'); }} className="text-blue-600 hover:underline mt-2 inline-block">View more</a>
                     </div>
                   </div>
                 </div>
