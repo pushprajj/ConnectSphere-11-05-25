@@ -653,13 +653,13 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                       <h3 className="text-lg font-medium text-gray-900 mb-2">Overview</h3>
                       <div className="mb-4">
                         <div
-                          className={`text-gray-600 ${showFullHomeDescription ? '' : 'line-clamp-5'} overflow-hidden`}
+                          className={`text-sm text-gray-600 ${showFullHomeDescription ? '' : 'line-clamp-5'} overflow-hidden`}
                           style={{ display: '-webkit-box', WebkitLineClamp: showFullHomeDescription ? 'none' : 5, WebkitBoxOrient: 'vertical' }}
                           dangerouslySetInnerHTML={{ __html: businessDescription || 'No about info yet.' }}
                         />
                         {businessDescription && (
                           <button
-                            className="text-indigo-600 hover:underline text-sm mt-1"
+                            className="text-sm text-blue-500 hover:underline mt-1"
                             onClick={() => setShowFullHomeDescription(v => !v)}
                           >
                             {showFullHomeDescription ? 'View less' : 'View more'}
@@ -679,7 +679,7 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                               </h4>
                               <span className="text-sm text-gray-500">{update.date}</span>
                             </div>
-                            <p className="mt-2 text-gray-600">{update.content}</p>
+                            <p className="mt-2 text-sm text-gray-600">{update.content}</p>
                           </div>
                         ))}
                       </div>
@@ -707,7 +707,7 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                       </button>
                     )}
                   </div>
-                  <div className="text-gray-600 mt-2" dangerouslySetInnerHTML={{ __html: businessDescription || 'No about info yet.' }} />
+                  <div className="text-sm text-gray-600 mt-2" dangerouslySetInnerHTML={{ __html: businessDescription || 'No about info yet.' }} />
                 </div>
               )}
               {activeTab === 'products' && (
@@ -734,9 +734,9 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                     {isOwnProfile && <EditButton onClick={() => {}} />}
                   </div>
                   <div className="mt-2">
-                    <p className="text-gray-600">{user.full_name || user.username} - Owner</p>
+                    <p className="text-sm text-gray-600">{user.full_name || user.username} - Owner</p>
                     {business.contact_person_name && (
-                      <p className="text-gray-600">{business.contact_person_name} - Contact</p>
+                      <p className="text-sm text-gray-600">{business.contact_person_name} - Contact</p>
                     )}
                   </div>
                 </div>
@@ -758,20 +758,20 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                         )}
                       </h3>
                       {business.contact_person_name && (
-                        <p className="text-gray-600 flex items-center mb-1">
+                        <p className="text-sm text-gray-600 flex items-center mb-1">
                           <FaUser className="mr-1" /> Contact Person: {business.contact_person_name}
                         </p>
                       )}
-                      <p className="text-gray-600 flex items-center mb-1">
+                      <p className="text-sm text-gray-600 flex items-center mb-1">
                         <FaMapMarkerAlt className="mr-1" /> Address: {contact.street}, {contact.city}, {contact.state} {contact.business_zip_code}, {contact.country}
                       </p>
-                      <p className="text-gray-600 flex items-center mb-1">
+                      <p className="text-sm text-gray-600 flex items-center mb-1">
                         <FaPhone className="mr-1" /> Phone: {contact.phone}
                       </p>
-                      <p className="text-gray-600 flex items-center mb-1">
+                      <p className="text-sm text-gray-600 flex items-center mb-1">
                         <FaEnvelope className="mr-1" /> Email: {contact.email}
                       </p>
-                      <p className="text-gray-600 flex items-center">
+                      <p className="text-sm text-gray-600 flex items-center">
                         <FaGlobe className="mr-1" /> Website: {contact.website}
                       </p>
                     </div>
@@ -793,6 +793,18 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                         <p className="text-red-500">Dynamic map not available. Please ensure NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is set.</p>
                       )}
                     </div>
+                    <div className="bg-white p-4 rounded-lg shadow-md mt-6 border border-gray-300">
+                      <h3 className="text-lg font-semibold mb-2">Trading Hours</h3>
+                      <ul className="list-disc pl-5 text-sm text-gray-600">
+                        <li>Monday: 9:00 AM - 5:00 PM</li>
+                        <li>Tuesday: 9:00 AM - 5:00 PM</li>
+                        <li>Wednesday: 9:00 AM - 5:00 PM</li>
+                        <li>Thursday: 9:00 AM - 5:00 PM</li>
+                        <li>Friday: 9:00 AM - 5:00 PM</li>
+                        <li>Saturday: Closed</li>
+                        <li>Sunday: Closed</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               )}
@@ -802,7 +814,7 @@ export default function ProfileTabs({ user, business }: { user: UserData; busine
                     <h2 className="text-xl font-semibold text-gray-800">Updates</h2>
                     {isOwnProfile && <EditButton onClick={() => {}} />}
                   </div>
-                  <p className="text-gray-600 mt-2">Latest posts and updates coming soon.</p>
+                  <p className="text-sm text-gray-600 mt-2">Latest posts and updates coming soon.</p>
                 </div>
               )}
             </div>
